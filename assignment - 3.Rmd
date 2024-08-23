@@ -1,0 +1,155 @@
+---
+title: "LDA & QDA"
+author: "krithiga"
+date: "2024-08-22"
+output: html_document
+---
+```{r}
+
+#data("Auto")
+?Auto
+
+```
+```{r}
+library(ISLR)
+```
+
+```{r}
+library(caret)
+
+```
+
+```{r}
+library(MASS)
+
+```
+```{r}
+library(class)
+```
+
+
+```{r}
+#(a)
+data(Auto)
+#data(AutoData)
+
+median(Auto$mpg)
+
+mpg1 <- (Auto$mpg > median(Auto$mpg))*1
+str(mpg1)
+head(Auto$mpg, 30)
+head(mpg1, 30)
+```  
+
+
+
+                      (B)
+```{r}
+
+AutoData <- data.frame(a = rnorm(100), b = rnorm(100), c = rnorm(100))
+cor(AutoData[, -10])
+AutoData$name <- NULL
+head(AutoData)
+
+pairs(~mpg1 + cylinders + displacement + horsepower + weight, 
+      data = Auto, 
+      col = c("blue", "green", "red", "yellow"))
+par(mfrow = c(2,2))
+plot(Auto$cylinders, mpg1, col = "blue", xlab = "cylinders", main = "cylinders vs. mpg1")
+plot(Auto$displacement, mpg1, col = "blue", xlab = "displacement", main = "displacement vs. mpg1")
+plot(Auto$horsepower, mpg1, col = "blue", xlab = "horsepower", main = "horsepower vs. mpg1")
+plot(Auto$weight, mpg1, col = "blue", xlab = "weight", main = "weight vs. mpg1")
+
+
+```
+                 
+                 
+                 
+                 
+                       (C)
+                       
+```{r}
+library(caret)
+Auto$mpg1 <- ifelse(Auto$mpg > median(Auto$mpg), 1, 0)
+Auto$mpg1 <- as.factor(Auto$mpg1)  
+
+table(Auto$mpg1)
+
+set.seed(777)
+Training <- createDataPartition(Auto$mpg1, p = 0.7, list = FALSE)
+
+training <- Auto[Training, ]
+testing  <- Auto[-Training, ]
+
+dim(training)
+dim(testing)
+```
+
+
+
+
+                    (D)
+                    
+```{r}
+lda_m1 <- lda(mpg1 ~ cylinders + displacement + horsepower
+              + weight, data = training)
+
+lda.pred <- predict(lda_m1, testing)$class
+
+table(lda.pred, testing$mpg1)
+error_lda <- mean(lda.pred != testing$mpg1)
+error_lda
+```
+                    
+                    
+                    
+                    
+                    
+                      (E)
+```{r}
+qda_m1 <- qda(mpg1 ~ cylinders + displacement
+              + horsepower + weight, data = training)
+
+qda.pred <- predict(qda_m1, testing)$class
+
+table(qda.pred, testing$mpg1)
+error_qda <- mean(qda.pred != testing$mpg1)
+error_qda
+```
+                     
+                     
+                     
+                     
+                      (G)
+```{r}
+logisticR_m1 <-glm(mpg1 ~ cylinders + displacement + horsepower + weight, data = training, family = binomial)
+
+logisticR.prob <- predict(logisticR_m1, testing, type = "response")
+
+logisticR.pred <- ifelse(logisticR.prob > 0.5, 1, 0)
+
+table(logisticR.pred, testing$mpg1)
+
+error_glm <- mean(logisticR.pred != testing$mpg1)
+error_glm
+```
+                  
+                  
+                  
+                  
+                    (F)       
+```{r}
+training.X <- cbind(training$cylinders, training$displacement, training$horsepower, training$weight)
+
+testing.X <- cbind(testing$cylinders, testing$displacement, testing$horsepower, testing$weight)
+
+knn.pred <- knn(training.X, testing.X, training$mpg1, k = 3)
+
+table(knn.pred, testing$mpg1)
+error_knn <- mean(knn.pred != testing$mpg1)
+error_knn
+```
+                    
+                    
+                       
+
